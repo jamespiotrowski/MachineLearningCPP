@@ -1,0 +1,14 @@
+Training images
+Training labels
+Testing images
+Testing labels
+Num Threads
+Num Epochs 
+Num Layers 
+Learning Rate
+Use Threads
+Activation Function
+Layer Start
+...
+...
+...

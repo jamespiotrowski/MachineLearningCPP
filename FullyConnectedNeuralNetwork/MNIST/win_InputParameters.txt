@@ -1,0 +1,12 @@
+C:\Users\james\Code\CPP\MNIST\Data\Training\train-images-idx3-ubyte
+C:\Users\james\Code\CPP\MNIST\Data\Training\train-labels-idx1-ubyte
+C:\Users\james\Code\CPP\MNIST\Data\Testing\t10k-images-idx3-ubyte
+C:\Users\james\Code\CPP\MNIST\Data\Testing\t10k-labels-idx1-ubyte
+3
+5
+2
+0.1 
+true
+SIGMOID
+40
+20
