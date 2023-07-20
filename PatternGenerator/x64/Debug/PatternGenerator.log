@@ -1,0 +1,3 @@
+﻿  PatternGenerator.cpp
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\PatternGenerator.cpp(139,23): warning C4244: 'initializing': conversion from 'double' to 'unsigned int', possible loss of data
+  PatternGenerator.vcxproj -> C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\x64\Debug\PatternGenerator.exe
