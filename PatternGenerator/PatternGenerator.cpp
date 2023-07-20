@@ -214,7 +214,7 @@ public:
 	void ComputeStraitLine(Coordinate c1, Coordinate c2) {
 		numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
 		line = new Coordinate[numCoordinates];
-		double slope = (c2.y - c1.y) / (c2.x - c1.x);
+		double slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
 		double b = c1.y - (slope * c1.x);
 		
 		int startY = (c2.y > c1.y) ? c1.y : c2.y;
@@ -460,7 +460,7 @@ public:
 class DiamondPattern : public UnitPattern {
 private:
 	const int widthScale = 0;
-	const int heightScale = 0;
+	const int heightScale = 1;
 
 	void GenerateUnitPattern() {
 		int centerHeight = 0, centerWidth = 0;
@@ -634,9 +634,9 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern *sq = new DiamondPattern(100, 100, 0.75, 0.65);
+	UnitPattern *sq = new DiamondPattern(100, 100, 0.15, 0.85);
 	sq->PrintPattern(outFile);
-	P = Pattern(950, 950 , 0, 0, sq);
+	P = Pattern(950, 950 , 50, 0, sq);
 	//P.PrintPattern(outFile);
 	delete sq;
 
