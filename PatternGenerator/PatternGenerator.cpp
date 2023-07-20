@@ -7,6 +7,151 @@ using namespace std;
 #define SCALES_SQUARE 1
 #define SCALES_DIAMOND 2
 
+
+/**********************************************************************************************
+###############################################################################################
+##### ARRAY CLASS
+###############################################################################################
+**********************************************************************************************/
+template <class T> class Array {
+private:
+
+	/* Array Members */
+	unsigned int arraySize = 0;
+	unsigned int maxSize = 0;
+	T* arr = nullptr;
+	unsigned int growthFactor = 100;
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void resize() {
+		maxSize += growthFactor;
+		T* newArr = new T[maxSize];
+		for (unsigned int i = 0; i < arraySize; i++) {
+			newArr[i] = arr[i];
+		}
+		delete[] arr;
+		arr = newArr;
+		newArr = nullptr;
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void clear() {
+		if (arr != nullptr) {
+			delete[] arr;
+		}
+		maxSize = 0;
+		arraySize = 0;
+		arr = nullptr;
+	}
+
+public:
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	Array() : arraySize(0), maxSize(0), arr(nullptr), growthFactor(1) { }
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	~Array() { clear(); }
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void operator=(const Array& copy) {
+		clear();
+		arraySize = copy.arraySize;
+		maxSize = copy.maxSize;
+		arr = new T[maxSize];
+		growthFactor = 100;
+		for (unsigned int i = 0; i < arraySize; i++) {
+			arr[i] = copy.arr[i];
+		}
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	Array(const Array& copy) {
+		(*this) = copy;
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void Add(T item) {
+		if (arraySize == maxSize) {
+			resize();
+		}
+		arr[arraySize] = item;
+		arraySize += 1;
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	T& operator[](unsigned int i) {
+		return arr[i];
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	unsigned int GetSize() const { return arraySize; }
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void reset() { arraySize = 0; }
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	bool exists(T item) { 
+		for (unsigned int i = 0; i < arraySize; i++) {
+			if (item == arr[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+};
+
+
+
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
 enum PatternType {
 	SQUARE
 	, CIRCLE 
@@ -24,6 +169,7 @@ struct Coordinate {
 	Coordinate() { }
 	Coordinate(int y, int x) : x(x), y(y) { }
 	string ToString() const { return ("{" + to_string(y) + "," + to_string(x) + "}"); }
+	bool operator==(const Coordinate& c) { return ((y == c.y) && (x == c.x)); }
 };
 
 /**********************************************************************************************
@@ -113,6 +259,70 @@ protected:
 		for (int i = 0; i < numberOfScales; i++) {
 			this->scales[i] = scales[i];
 		}
+	}
+
+	void PlotLines(Array<Line> lines) {
+		for (int i = 0; i < lines.GetSize(); i++) {
+			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+				pattern[lines[i][j].y][lines[i][j].x] = 1;
+			}
+		}
+	}
+
+	bool IsInsidePolygon(Coordinate c) {
+		int edges = 0;
+		for (int w = c.x; w < width; w += 1) {
+			if (pattern[c.y][w] == 1) {
+				edges += 1;
+			}
+		}
+		return (((edges % 2) == 1));
+	}
+
+	bool IsEdge(Array<Line>& lines, Coordinate c) {
+		for (int i = 0; i < lines.GetSize(); i++) {
+			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+				if (lines[i][j] == c) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	void FillInPolygon(Array<Line>& lines) {
+		Coordinate c;
+		Array<Coordinate> edgePoints;
+		for (int i = 0; i < lines.GetSize(); i++) {
+			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+				if (!edgePoints.exists(lines[i][j])) {
+					edgePoints.Add(lines[i][j]);
+				}
+			}
+		}
+
+		int* edgeCount = new int[height];
+		for (int i = 0; i < height; i++) {
+			edgeCount[i] = 0;
+		}
+
+		for (int i = 0; i < edgePoints.GetSize(); i++) {
+			edgeCount[edgePoints[i].y] += 1;
+		}
+
+		for (int h = 0; h < height; h++) {
+			if ((edgeCount[h] > 1)) {
+				for (int w = 0; w < width; w++) {
+					c.y = h;
+					c.x = w;
+					if (IsInsidePolygon(c)) {
+						pattern[h][w] = 1;
+					}
+				}
+			}
+		}
+
+		delete[] edgeCount;
 	}
 
 
@@ -249,15 +459,28 @@ public:
 **********************************************************************************************/
 class DiamondPattern : public UnitPattern {
 private:
-	const int scale1 = 0; // Scale that square uses
+	const int widthScale = 0;
+	const int heightScale = 0;
 
 	void GenerateUnitPattern() {
 		int centerHeight = 0, centerWidth = 0;
-		GetCenter(height, width, centerHeight, centerWidth);					 // Detmine center coordinates
-		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
+		GetCenter(height, width, centerHeight, centerWidth); // Detmine center coordinates
+		int widthRadius = (scales[widthScale] * width) / 2;
+		int heightRadius = (scales[heightScale] * height) / 2;
 		/* Compute the pattern area */
-		// hmmmmmmmmmmmmmmmm
-		// Function to draw a line? 
+		Coordinate highestPoint(centerHeight + heightRadius, centerWidth);
+		Coordinate lowestPoint(centerHeight - heightRadius, centerWidth);
+		Coordinate leftMostPoint(centerHeight, centerWidth - widthRadius);
+		Coordinate rightMostPoint(centerHeight, centerWidth + widthRadius);
+
+		Array<Line> arr;
+		arr.Add(Line(highestPoint, leftMostPoint));
+		arr.Add(Line(highestPoint, rightMostPoint));
+		arr.Add(Line(lowestPoint, rightMostPoint));
+		arr.Add(Line(lowestPoint, leftMostPoint));
+
+		PlotLines(arr);
+		FillInPolygon(arr);
 	}
 
 public:
@@ -411,52 +634,16 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern *sq = new SquarePattern(100, 100, 0.75);
+	UnitPattern *sq = new DiamondPattern(100, 100, 0.75, 0.65);
+	sq->PrintPattern(outFile);
 	P = Pattern(950, 950 , 0, 0, sq);
-	P.PrintPattern(outFile);
+	//P.PrintPattern(outFile);
 	delete sq;
 
 	P.SavePatternToBmp("C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\Outfile.bmp");
 
 
 	outFile.close();
-
-	Coordinate cA1(4,3), cA2(0,4);
-	Line lA(cA2, cA1);
-	string s = "";
-	for (int i = 0; i < lA.GetNumCoordinates(); i++) {
-		s += lA[i].ToString() + " ";
-	}
-	s += "\n";
-	cout << s;
-
-	Coordinate cB1(4, 5), cB2(0, 4);
-	Line lB(cB2, cB1);
-	s = "";
-	for (int i = 0; i < lB.GetNumCoordinates(); i++) {
-		s += lB[i].ToString() + " ";
-	}
-	s += "\n";
-	cout << s;
-
-	Coordinate cC1(4, 5), cC2(8, 4);
-	Line lC(cC2, cC1);
-	s = "";
-	for (int i = 0; i < lC.GetNumCoordinates(); i++) {
-		s += lC[i].ToString() + " ";
-	}
-	s += "\n";
-	cout << s;
-
-	Coordinate cD1(4, 3), cD2(8, 4);
-	Line lD(cD2, cD1);
-	s = "";
-	for (int i = 0; i < lD.GetNumCoordinates(); i++) {
-		s += lD[i].ToString() + " ";
-	}
-	s += "\n";
-	cout << s;
-
 
 
 	return 0;
