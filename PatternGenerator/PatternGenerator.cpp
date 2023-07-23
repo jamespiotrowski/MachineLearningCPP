@@ -6,6 +6,7 @@ using namespace std;
 
 #define SCALES_SQUARE 1
 #define SCALES_DIAMOND 2
+#define SCALES_CIRCLE 1
 
 
 /**********************************************************************************************
@@ -172,71 +173,6 @@ struct Coordinate {
 	bool operator==(const Coordinate& c) { return ((y == c.y) && (x == c.x)); }
 };
 
-/**********************************************************************************************
-###############################################################################################
-#####
-###############################################################################################
-**********************************************************************************************/
-class Line {
-private: 
-	Coordinate* line = nullptr;
-	int numCoordinates = 0;
-
-	void clear() {
-		delete[] line;
-		line = nullptr;
-		numCoordinates = 0;
-	}
-
-public:
-
-	Line() { }
-
-	Line(Coordinate c1, Coordinate c2) {
-		ComputeStraitLine(c1, c2);
-	}
-	
-	~Line() { clear(); }
-
-	void operator=(const Line& copy) {
-		clear();
-		this->numCoordinates = copy.numCoordinates;
-		this->line = new Coordinate[numCoordinates];
-		for (int i = 0; i < numCoordinates; i++) {
-			line[i] = copy.line[i];
-		}
-	}
-
-	Line(const Line& copy) {
-		(*this) = copy;
-	}
-
-	void ComputeStraitLine(Coordinate c1, Coordinate c2) {
-		numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
-		line = new Coordinate[numCoordinates];
-		double slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
-		double b = c1.y - (slope * c1.x);
-		
-		int startY = (c2.y > c1.y) ? c1.y : c2.y;
-		Coordinate c;
-		double d;
-		for (int i = 0; i < numCoordinates; i += 1) {
-			c.y = i + startY;
-			c.x = RoundDouble((((double)(c.y)) - b) / slope);
-			line[i] = c;
-		}
-	}
-
-	Coordinate operator[](int i) {
-		return line[i];
-	}
-
-	int GetNumCoordinates() const {
-		return numCoordinates;
-	}
-
-};
-
 
 /**********************************************************************************************
 ###############################################################################################
@@ -261,9 +197,26 @@ protected:
 		}
 	}
 
-	void PlotLines(Array<Line> lines) {
+	Array<Coordinate> ComputeStraitLine(Coordinate c1, Coordinate c2) {
+		int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
+		double slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
+		double b = c1.y - (slope * c1.x);
+
+		Array<Coordinate> line;
+		int startY = (c2.y > c1.y) ? c1.y : c2.y;
+		Coordinate c;
+		double d;
+		for (int i = 0; i < numCoordinates; i += 1) {
+			c.y = i + startY;
+			c.x = RoundDouble((((double)(c.y)) - b) / slope);
+			line.Add(c);
+		}
+		return line;
+	}
+
+	void PlotLines(Array<Array<Coordinate>> lines) {
 		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+			for (int j = 0; j < lines[i].GetSize(); j++) {
 				pattern[lines[i][j].y][lines[i][j].x] = 1;
 			}
 		}
@@ -279,9 +232,9 @@ protected:
 		return (((edges % 2) == 1));
 	}
 
-	bool IsEdge(Array<Line>& lines, Coordinate c) {
+	bool IsEdge(Array<Array<Coordinate>>& lines, Coordinate c) {
 		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+			for (int j = 0; j < lines[i].GetSize(); j++) {
 				if (lines[i][j] == c) {
 					return true;
 				}
@@ -290,11 +243,12 @@ protected:
 		return false;
 	}
 
-	void FillInPolygon(Array<Line>& lines) {
+	// Alter this so that an edge can be any length of consecutive pixels
+	void FillInPolygon(Array<Array<Coordinate>>& lines) {
 		Coordinate c;
 		Array<Coordinate> edgePoints;
 		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetNumCoordinates(); j++) {
+			for (int j = 0; j < lines[i].GetSize(); j++) {
 				if (!edgePoints.exists(lines[i][j])) {
 					edgePoints.Add(lines[i][j]);
 				}
@@ -306,6 +260,7 @@ protected:
 			edgeCount[i] = 0;
 		}
 
+		// This needs adjustment. Only count when previous switched.
 		for (int i = 0; i < edgePoints.GetSize(); i++) {
 			edgeCount[edgePoints[i].y] += 1;
 		}
@@ -325,6 +280,40 @@ protected:
 		delete[] edgeCount;
 	}
 
+	/* this.... shouldnt be used. */
+	void FillInBruteForce(const Coordinate& c) {
+		if (c.x < 0 || c.x >= width || c.y < 0 || c.y >= height) { return; }
+		if (pattern[c.y][c.x] != 0) { return; }
+		pattern[c.y][c.x] = 1;
+		/* Down */
+		if ((c.y + 1) < height) {
+			if (pattern[c.y + 1][c.x] != 1) {
+				Coordinate down(c.y + 1, c.x);
+				FillInBruteForce(down);
+			}
+		}
+		/* Up */
+		if ((c.y - 1) >= 0) {
+			if (pattern[c.y - 1][c.x] != 1) {
+				Coordinate up(c.y - 1, c.x);;
+				FillInBruteForce(up);
+			}
+		}
+		/* right */
+		if ((c.x + 1) < width) {
+			if (pattern[c.y][c.x + 1] != 1) {
+				Coordinate right(c.y, c.x + 1);
+				FillInBruteForce(right);
+			}
+		}
+		/* left */
+		if ((c.x - 1) >= 0) {
+			if (pattern[c.y][c.x - 1] != 1) {
+				Coordinate left(c.y, c.x - 1);
+				FillInBruteForce(left);
+			}
+		}
+	}
 
 private:
 
@@ -473,11 +462,11 @@ private:
 		Coordinate leftMostPoint(centerHeight, centerWidth - widthRadius);
 		Coordinate rightMostPoint(centerHeight, centerWidth + widthRadius);
 
-		Array<Line> arr;
-		arr.Add(Line(highestPoint, leftMostPoint));
-		arr.Add(Line(highestPoint, rightMostPoint));
-		arr.Add(Line(lowestPoint, rightMostPoint));
-		arr.Add(Line(lowestPoint, leftMostPoint));
+		Array<Array<Coordinate>> arr;
+		arr.Add(ComputeStraitLine(highestPoint, leftMostPoint));
+		arr.Add(ComputeStraitLine(highestPoint, rightMostPoint));
+		arr.Add(ComputeStraitLine(lowestPoint, rightMostPoint));
+		arr.Add(ComputeStraitLine(lowestPoint, leftMostPoint));
 
 		PlotLines(arr);
 		FillInPolygon(arr);
@@ -496,6 +485,76 @@ public:
 
 };
 
+
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
+class CirclePattern : public UnitPattern {
+private:
+	const int scale1 = 0;
+
+	int PythagoreanTheorem_Edge(int a_or_b, double c) {
+		return sqrt((c * c) - (a_or_b * a_or_b));
+	}
+
+	void GenerateUnitPattern() {
+		int centerHeight = 0, centerWidth = 0;
+		GetCenter(height, width, centerHeight, centerWidth); // Detmine center coordinates
+		double radius = (scales[scale1] * ((height < width) ? height : width)) / 2;
+		/* Compute the pattern area */
+		Array<Coordinate> circlePoints;
+		Coordinate coords[8];
+
+		for (int i = 1; i <= (int)radius; i++) {
+			int yPoint = PythagoreanTheorem_Edge(i, radius);
+
+			coords[0] = Coordinate(centerHeight - yPoint, centerWidth + i);
+			coords[1] = Coordinate(centerHeight - yPoint, centerWidth - i);
+			coords[2] = Coordinate(centerHeight + yPoint, centerWidth + i);
+			coords[3] = Coordinate(centerHeight + yPoint, centerWidth - i);
+			coords[4] = Coordinate(centerHeight - i, centerWidth + yPoint);
+			coords[5] = Coordinate(centerHeight - i, centerWidth - yPoint);
+			coords[6] = Coordinate(centerHeight + i, centerWidth + yPoint);
+			coords[7] = Coordinate(centerHeight + i, centerWidth - yPoint);
+
+			for (int j = 0; j < 8; j++) {
+				if (!circlePoints.exists(coords[j])) {
+					circlePoints.Add(coords[j]);
+				}
+			}
+		}
+
+		coords[0] = Coordinate(centerHeight, centerWidth + radius);
+		coords[1] = Coordinate(centerHeight, centerWidth - radius);
+		coords[2] = Coordinate(centerHeight + radius, centerWidth);
+		coords[3] = Coordinate(centerHeight - radius, centerWidth);
+		for (int j = 0; j < 4; j++) {
+			if (!circlePoints.exists(coords[j])) {
+				circlePoints.Add(coords[j]);
+			}
+		}
+
+		Array<Coordinate> c;
+		for (int i = 0; i < circlePoints.GetSize(); i++) {
+			c.Add(circlePoints[i]);
+		}
+		Array<Array<Coordinate>> lines;
+		lines.Add(c);
+		PlotLines(lines);
+		FillInBruteForce(Coordinate(centerHeight, centerWidth));
+	}
+
+public:
+
+	CirclePattern(int height, int width, double scale) : UnitPattern(height, width) {
+		double s = scale;
+		SetScale(SCALES_CIRCLE, &s);
+		GenerateUnitPattern();
+	}
+
+};
 
 /**********************************************************************************************
 ###############################################################################################
@@ -624,8 +683,6 @@ public:
 
 };
 
-
-
 int main()
 {	string fName = "C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\Outfile.txt";
 
@@ -634,9 +691,9 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern *sq = new DiamondPattern(100, 100, 0.15, 0.85);
+	UnitPattern* sq = new CirclePattern(50, 50, 0.99); //new DiamondPattern(100, 100, 0.5, 0.5);  // //SquarePattern(100, 100, 0.55);
 	sq->PrintPattern(outFile);
-	P = Pattern(950, 950 , 50, 0, sq);
+	P = Pattern(1000, 2000 , 5, 5, sq);
 	//P.PrintPattern(outFile);
 	delete sq;
 
