@@ -7,6 +7,8 @@ using namespace std;
 #define SCALES_SQUARE 1
 #define SCALES_DIAMOND 2
 #define SCALES_CIRCLE 1
+#define SCALES_TRIANGLE 2
+#define SCALES_STAR 1
 
 
 /**********************************************************************************************
@@ -51,6 +53,62 @@ private:
 		maxSize = 0;
 		arraySize = 0;
 		arr = nullptr;
+	}
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	int partition(int start, int end)
+	{
+		T pivot = arr[start];
+		int count = 0;
+		for (int i = start + 1; i <= end; i++) {
+			if (arr[i] <= pivot)
+				count++;
+		}
+
+		// Giving pivot element its correct position
+		int pivotIndex = start + count;
+		swap(arr[pivotIndex], arr[start]);
+
+		// Sorting left and right parts of the pivot element
+		int i = start, j = end;
+
+		while (i < pivotIndex && j > pivotIndex) {
+
+			while (arr[i] <= pivot) {
+				i++;
+			}
+
+			while (arr[j] > pivot) {
+				j--;
+			}
+
+			if (i < pivotIndex && j > pivotIndex) {
+				swap(arr[i++], arr[j--]);
+			}
+		}
+
+		return pivotIndex;
+	}
+
+	void quickSort(int start, int end)
+	{
+
+		// base case
+		if (start >= end)
+			return;
+
+		// partitioning the array
+		int p = partition(start, end);
+
+		// Sorting the left part
+		quickSort(start, p - 1);
+
+		// Sorting the right part
+		quickSort(p + 1, end);
 	}
 
 public:
@@ -144,6 +202,15 @@ public:
 		return false;
 	}
 
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void sort() {
+		quickSort(0, arraySize - 1);
+	}
+	
 };
 
 
@@ -171,6 +238,12 @@ struct Coordinate {
 	Coordinate(int y, int x) : x(x), y(y) { }
 	string ToString() const { return ("{" + to_string(y) + "," + to_string(x) + "}"); }
 	bool operator==(const Coordinate& c) { return ((y == c.y) && (x == c.x)); }
+	bool operator<=(const Coordinate& c) { 
+		if (this->y < c.y) { return true; }
+		if (this->y > c.y) { return false; }
+		return (this->x <= c.x);
+	}
+	bool operator>(const Coordinate& c) { return !((*this) <= c); }
 };
 
 
@@ -184,6 +257,17 @@ protected:
 	char** pattern = nullptr;
 	int height = 0, width = 0, numberOfScales = 0;
 	double* scales = nullptr;
+
+private: 
+
+	void FillInUntilEdge(const int& y, int& w) {
+		while (w < width && pattern[y][w] != 1) {
+			pattern[y][w] = 1;
+			w += 1;
+		}
+	}
+
+protected:
 
 	void GetCenter(const int& height, const int& width, int& centerHeight, int& centerWidth) {
 		centerHeight = height / 2;
@@ -199,8 +283,19 @@ protected:
 
 	Array<Coordinate> ComputeStraitLine(Coordinate c1, Coordinate c2) {
 		int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
-		double slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
-		double b = c1.y - (slope * c1.x);
+		double slope = 0;
+		double b = 0;
+		bool infSlope = false;
+
+		if ((c2.x - c1.x) == 0) {
+			infSlope = true;
+		}
+		else {
+			slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
+			b = c1.y - (slope * c1.x);
+		}
+
+		cout << "Slope Computation: " << (double)(c2.y - c1.y) << " / " << (double)(c2.x - c1.x) << endl;
 
 		Array<Coordinate> line;
 		int startY = (c2.y > c1.y) ? c1.y : c2.y;
@@ -208,8 +303,9 @@ protected:
 		double d;
 		for (int i = 0; i < numCoordinates; i += 1) {
 			c.y = i + startY;
-			c.x = RoundDouble((((double)(c.y)) - b) / slope);
+			c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
 			line.Add(c);
+			cout << c.ToString() << " : [" << slope << " , " << b << "]" << endl;
 		}
 		return line;
 	}
@@ -217,6 +313,7 @@ protected:
 	void PlotLines(Array<Array<Coordinate>> lines) {
 		for (int i = 0; i < lines.GetSize(); i++) {
 			for (int j = 0; j < lines[i].GetSize(); j++) {
+				cout << lines[i][j].ToString() << endl;
 				pattern[lines[i][j].y][lines[i][j].x] = 1;
 			}
 		}
@@ -224,9 +321,17 @@ protected:
 
 	bool IsInsidePolygon(Coordinate c) {
 		int edges = 0;
+		int sp = width - 1;
 		for (int w = c.x; w < width; w += 1) {
-			if (pattern[c.y][w] == 1) {
-				edges += 1;
+			if (w < sp) {
+				if (pattern[c.y][w] == 1 && pattern[c.y][w + 1] != 1) {
+					edges += 1;
+				}
+			}
+			else {
+				if (pattern[c.y][w] == 1 && pattern[c.y][w - 1] != 1) {
+					edges += 1;
+				}
 			}
 		}
 		return (((edges % 2) == 1));
@@ -260,9 +365,24 @@ protected:
 			edgeCount[i] = 0;
 		}
 
-		// This needs adjustment. Only count when previous switched.
-		for (int i = 0; i < edgePoints.GetSize(); i++) {
-			edgeCount[edgePoints[i].y] += 1;
+		edgePoints.sort();
+
+		if (edgePoints.GetSize() > 1) {
+
+			/* First point */
+			edgeCount[edgePoints[0].y] += 1;
+
+			/* remainder */
+			for (int i = 1; i < edgePoints.GetSize(); i++) {
+				if (edgePoints[i - 1].y == edgePoints[i].y) { /* if same height */
+					if (edgePoints[i - 1].x != (edgePoints[i].x - 1)) { /* if not right next to each other */
+						edgeCount[edgePoints[i].y] += 1;
+					}
+				}
+				else {
+					edgeCount[edgePoints[i].y] += 1;
+				}
+			}
 		}
 
 		for (int h = 0; h < height; h++) {
@@ -271,7 +391,7 @@ protected:
 					c.y = h;
 					c.x = w;
 					if (IsInsidePolygon(c)) {
-						pattern[h][w] = 1;
+						FillInUntilEdge(h, w);
 					}
 				}
 			}
@@ -543,7 +663,8 @@ private:
 		Array<Array<Coordinate>> lines;
 		lines.Add(c);
 		PlotLines(lines);
-		FillInBruteForce(Coordinate(centerHeight, centerWidth));
+		FillInPolygon(lines);
+		//FillInBruteForce(Coordinate(centerHeight, centerWidth));
 	}
 
 public:
@@ -555,6 +676,111 @@ public:
 	}
 
 };
+
+
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
+class TrianglePattern : public UnitPattern {
+private:
+	const int widthScale = 0;
+	const int heightScale = 1;
+
+	void GenerateUnitPattern() {
+		int centerHeight = 0, centerWidth = 0;
+		GetCenter(height, width, centerHeight, centerWidth); // Detmine center coordinates
+		int widthRadius = (scales[widthScale] * width) / 2;
+		int heightRadius = (scales[heightScale] * height) / 2;
+		/* Compute the pattern area */
+		Coordinate highestPoint(centerHeight - heightRadius, centerWidth);
+		Coordinate leftMostPoint(centerHeight + heightRadius, centerWidth - widthRadius);
+		Coordinate rightMostPoint(centerHeight + heightRadius, centerWidth + widthRadius);
+
+		Array<Array<Coordinate>> arr;
+		arr.Add(ComputeStraitLine(highestPoint, leftMostPoint));
+		arr.Add(ComputeStraitLine(highestPoint, rightMostPoint));
+		arr.Add(ComputeStraitLine(rightMostPoint, leftMostPoint));
+
+		PlotLines(arr);
+		FillInPolygon(arr);
+	}
+
+public:
+
+	TrianglePattern(int height, int width, double widthScale, double heightScale) : UnitPattern(height, width) {
+		double* scales = new double[SCALES_TRIANGLE];
+		scales[0] = widthScale;
+		scales[1] = heightScale;
+		SetScale(SCALES_TRIANGLE, scales);
+		GenerateUnitPattern();
+		delete[] scales;
+	}
+
+};
+
+
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
+class StarPattern : public UnitPattern {
+private:
+	const int scale1 = 0; // Scale that square uses
+
+	void GenerateUnitPattern() {
+		int centerHeight = 0, centerWidth = 0;
+		GetCenter(height, width, centerHeight, centerWidth);					 // Detmine center coordinates
+		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
+		int halfRadius = radius / 2;
+		cout << radius << "," << halfRadius << endl;
+		/* Compute the pattern area */
+		Coordinate* c = new Coordinate[10];
+		c[0] = Coordinate(centerHeight - radius, centerWidth); // highest point
+		c[1] = Coordinate(centerHeight - halfRadius, centerWidth + halfRadius);
+		c[2] = Coordinate(centerHeight, centerWidth + radius);
+		c[3] = Coordinate(centerHeight + halfRadius, centerWidth + halfRadius);
+		c[4] = Coordinate(centerHeight + radius, centerWidth + halfRadius);
+		c[5] = Coordinate(centerHeight + halfRadius, centerWidth);
+		c[6] = Coordinate(centerHeight + radius, centerWidth - halfRadius);
+		c[7] = Coordinate(centerHeight + halfRadius , centerWidth - halfRadius);
+		c[8] = Coordinate(centerHeight, centerWidth - radius);
+		c[9] = Coordinate(centerHeight - halfRadius, centerWidth - halfRadius);
+
+		for (int i = 0; i < 10; i++) {
+			cout << c[i].ToString() << endl;
+		}
+		cout << "------------------" << endl;
+
+		Array<Array<Coordinate>> edges;
+		edges.Add(ComputeStraitLine(c[0], c[1]));
+		edges.Add(ComputeStraitLine(c[1], c[2]));
+		edges.Add(ComputeStraitLine(c[2], c[3]));
+		edges.Add(ComputeStraitLine(c[3], c[4]));
+		edges.Add(ComputeStraitLine(c[4], c[5]));
+		edges.Add(ComputeStraitLine(c[5], c[6]));
+		edges.Add(ComputeStraitLine(c[6], c[7]));
+		edges.Add(ComputeStraitLine(c[7], c[8]));
+		edges.Add(ComputeStraitLine(c[8], c[9]));
+		edges.Add(ComputeStraitLine(c[9], c[0]));
+
+		delete[] c;
+
+		PlotLines(edges);
+		FillInPolygon(edges);
+	}
+
+public:
+
+	StarPattern(int height, int width, double scale) : UnitPattern(height, width) {
+		SetScale(SCALES_STAR, &scale);
+		GenerateUnitPattern();
+	}
+
+};
+
 
 /**********************************************************************************************
 ###############################################################################################
@@ -691,9 +917,12 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern* sq = new CirclePattern(50, 50, 0.99); //new DiamondPattern(100, 100, 0.5, 0.5);  // //SquarePattern(100, 100, 0.55);
+	UnitPattern* sq = new StarPattern(100, 100, 0.7);
+		//new TrianglePattern(100, 100, 0.12, 0.96);
+		//new CirclePattern(100, 100, 1.0);
+		//new DiamondPattern(100, 100, 0.5, 0.5);  
 	sq->PrintPattern(outFile);
-	P = Pattern(1000, 2000 , 5, 5, sq);
+	P = Pattern(1000, 2000 , 0, 0, sq);
 	//P.PrintPattern(outFile);
 	delete sq;
 
@@ -701,6 +930,10 @@ int main()
 
 
 	outFile.close();
+
+
+
+	
 
 
 	return 0;
