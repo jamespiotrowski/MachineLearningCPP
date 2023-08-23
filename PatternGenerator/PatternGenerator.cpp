@@ -10,7 +10,6 @@ using namespace std;
 #define SCALES_TRIANGLE 2
 #define SCALES_STAR 1
 
-
 /**********************************************************************************************
 ###############################################################################################
 ##### ARRAY CLASS
@@ -174,6 +173,10 @@ public:
 		return arr[i];
 	}
 
+	T& At(unsigned int i) const {
+		return arr[i];
+	}
+
 	/****************************************************************
 	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
@@ -210,10 +213,42 @@ public:
 	void sort() {
 		quickSort(0, arraySize - 1);
 	}
-	
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void remove(unsigned int i) {
+		if (i < 0 || i >= arraySize) {
+			return;
+		}
+		for (unsigned int j = i; j < arraySize - 1; j++) {
+			arr[j] = arr[j + 1];
+		}
+		arraySize = arraySize - 1;
+	}
+
+
+	/****************************************************************
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+	****************************************************************/
+	void removeDuplicates() { // WARNING THIS WILL SORT YOUR ARRAY
+		sort();
+		unsigned int i = 0;
+		while (i < (arraySize - 1)) {
+			if (arr[i] == arr[i + 1]) {
+				remove(i + 1);
+			}
+			else {
+				i += 1;
+			}
+		}
+	}
+
 };
-
-
 
 /**********************************************************************************************
 ###############################################################################################
@@ -237,13 +272,300 @@ struct Coordinate {
 	Coordinate() { }
 	Coordinate(int y, int x) : x(x), y(y) { }
 	string ToString() const { return ("{" + to_string(y) + "," + to_string(x) + "}"); }
-	bool operator==(const Coordinate& c) { return ((y == c.y) && (x == c.x)); }
-	bool operator<=(const Coordinate& c) { 
+	bool operator==(const Coordinate& c) const { return ((y == c.y) && (x == c.x)); }
+	bool operator<=(const Coordinate& c) const {
 		if (this->y < c.y) { return true; }
 		if (this->y > c.y) { return false; }
 		return (this->x <= c.x);
 	}
-	bool operator>(const Coordinate& c) { return !((*this) <= c); }
+	bool operator>(const Coordinate& c) const { return !((*this) <= c); }
+};
+
+class Angle {
+public:
+	Coordinate c;
+	bool intersect = true;
+
+	Angle() : c(0, 0), intersect(false){ }
+
+	Angle(Coordinate c1, bool i) : c(c1){
+		intersect = i;
+	}
+
+	void operator=(const Angle& copy) {
+		c = copy.c;
+		intersect = copy.intersect;
+	}
+
+	Angle(const Angle& copy) {
+		(*this) = copy;
+	}
+
+	bool operator==(const Angle& a) { return this->c == a.c; }
+	bool operator<=(const Angle& a) { return (this->c <= a.c); }
+	bool operator>(const Angle& a) { return !((*this) <= a); }
+
+	string ToString() const {
+		string s = "[" + c.ToString() + ",";
+		if (intersect) {
+			s += "i]";
+		}
+		else {
+			s += "t]";
+		}
+		return s;
+	}
+};
+
+class Edge {
+public:
+	Coordinate c1, c2;
+	double slope = 1;
+	double b = 0;
+	bool infSlope = false;
+
+	Edge() {}
+
+	Edge(Coordinate ca, Coordinate cb) {
+		if (cb > ca) {
+			c1 = ca;
+			c2 = cb;
+		}
+		c1 = cb;
+		c2 = ca;
+
+		if ((c2.x - c1.x) == 0) {
+			infSlope = true;
+		}
+		else {
+			slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
+			b = (double)c1.y - (slope * (double)c1.x);
+		}
+	}
+
+	bool operator==(const Edge& e) {
+		return (c1 == e.c1) && (c2 == e.c2);
+	}
+
+	bool operator<=(const Edge& e) {
+		return (c1 <= e.c1) && (c2 <= e.c2);
+	}
+
+	bool operator>(const Edge& e) {
+		return !((*this) <= e);
+	}
+
+	static bool SharesPoint(const Edge& edge1, const Edge& edge2) {
+		return (edge1.c1 == edge2.c1) || (edge1.c1 == edge2.c2) || (edge1.c2 == edge2.c1) || (edge1.c2 == edge2.c2);
+	}
+
+	static Coordinate GetSharedPoint(const Edge& edge1, const Edge& edge2){
+		if (edge1.c1 == edge2.c1) { return edge1.c1; }
+		if (edge1.c1 == edge2.c2) { return edge1.c1; }
+		if (edge1.c2 == edge2.c1) { return edge1.c2; }
+		if (edge1.c2 == edge2.c2) { return edge1.c2; }
+		cout << "ERROR: Edge::GetSharedPoint - Edges do not share a point, returning (0,0)" << endl;
+		return Coordinate(0, 0);
+	}
+
+	string ToString() const {
+		string s = "[" + c1.ToString() + " - " + c2.ToString() + "] :";
+		if (!infSlope) {
+			s += to_string(slope) + " ";
+		}
+		else {
+			s += "(inf) ";
+		}
+		return s;
+	}
+
+	double getValueAtY(unsigned int y) const {
+		return ((infSlope) ? c2.x : ((((double)y) - b) / slope));
+	}
+};
+
+class Polygon {
+private:
+	Array<Coordinate> points;
+	Array<Edge> edges;
+	Array<Angle> angles;
+
+	unsigned int maxY, minY, maxX, minX;
+
+public:
+
+	bool pointWithinPolygonRange(const Coordinate& c) const {
+		return c.y >= minY && c.y <= maxY && c.x <= maxX && c.x >= minX;
+	}
+
+	static Array<Coordinate> ComputeStraitLine(Coordinate c1, Coordinate c2) {
+		int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
+		double slope = 0;
+		double b = 0;
+		bool infSlope = false;
+
+		if ((c2.x - c1.x) == 0) {
+			infSlope = true;
+		}
+		else {
+			slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
+			b = c1.y - (slope * c1.x);
+		}
+
+		Array<Coordinate> line;
+		int startY = (c2.y > c1.y) ? c1.y : c2.y;
+		Coordinate c;
+		double d;
+		for (int i = 0; i < numCoordinates; i += 1) {
+			c.y = i + startY;
+			c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
+			line.Add(c);
+		}
+
+		if (!line.exists(c1)) { line.Add(c1); }
+		if (!line.exists(c2)) { line.Add(c2); }
+
+		return line;
+	}
+
+	static bool inLineWithAngle(const Coordinate& c, const Angle& a) {
+		return (c.y == a.c.y) && (c.x <= a.c.x);
+	}
+
+	static bool intersectsAngle(const Coordinate& c, const Angle& a) {
+		if (c.y == a.c.y) {
+			if (c.x <= a.c.x) {
+				return a.intersect;
+			}
+		}
+		return false;
+	}
+
+	static bool intersectsEdge(const Coordinate& c, const Edge& e) {
+		if ((c.y <= e.c1.y && c.y >= e.c2.y) || (c.y <= e.c2.y && c.y >= e.c1.y)) {
+			double x = e.getValueAtY(c.y);
+			return x >= ((double)c.x);
+		}
+		return false;
+	}
+
+	bool isInsidePolygon(const Coordinate& c) const {
+
+		if (pointWithinPolygonRange(c)) {
+			unsigned int intersections = 0;
+			for (unsigned int i = 0; i < edges.GetSize(); i++) {
+				if (intersectsEdge(c, edges.At(i))) { // If ray would intersect an edge
+					intersections += 1;
+				}
+			}
+
+			for (unsigned int i = 0; i < angles.GetSize(); i++) {
+				if (inLineWithAngle(c, angles.At(i))) { // If ray would intersect an edge
+					if (intersectsAngle(c, angles.At(i))) {
+						intersections -= 1; // would have double counted for two edges meeting, sub 1
+					}
+					else {
+						intersections -= 2; // would have double counted for two edges meeting, sub 2 (because it doesnt intersect the angle)
+					}
+				}
+			}
+
+			return ((intersections % 2) != 0);
+		}
+		return false;
+	}
+
+	Polygon(Array<Edge> e) : edges(e) {
+		// Remove dupes from list of edges
+		edges.removeDuplicates();
+
+		// Get all points
+		for (unsigned int i = 0; i < edges.GetSize(); i++) {
+			Array<Coordinate> line = ComputeStraitLine(edges[i].c1, edges[i].c2);
+			for (unsigned int j = 0; j < line.GetSize(); j++) {
+				points.Add(line[j]);
+			}
+		}
+		// Remove dupes
+		points.removeDuplicates();
+
+		// Find angles
+		for (unsigned int i = 0; i < edges.GetSize(); i++) {
+			for (unsigned int j = 0; j < edges.GetSize(); j++) {
+				if (i == j) {
+					continue;
+				}
+				// If edges share a point
+				if (Edge::SharesPoint(edges[i], edges[j])) {
+					// Get the point
+					Coordinate c = Edge::GetSharedPoint(edges[i], edges[j]);
+					// Get the other 2 coordinates
+					Coordinate other1 = (edges[i].c1 == c) ? edges[i].c2 : edges[i].c1;
+					Coordinate other2 = (edges[j].c1 == c) ? edges[j].c2 : edges[j].c1;
+					// Determine if a ray would intersect the two edges or just touch it
+					bool intersection = ((other1.y > c.y) && (other2.y < c.y)) || ((other1.y < c.y) && (other2.y > c.y));
+					Angle a(c, intersection);
+					angles.Add(a);
+				}
+			}
+		}
+		// Remove dupes - not doing this because bug with copying the intersection bool between objects
+		angles.removeDuplicates();	
+
+		if (points.GetSize() > 0) {
+			maxY = points[0].y;
+			minY = points[0].y;
+			maxX = points[0].x;
+			minX = points[0].x;
+			for (unsigned int i = 1; i < points.GetSize(); i++) {
+				if (points[i].y > maxY) { maxY = points[i].y; }
+				if (points[i].y < minY) { minY = points[i].y; }
+				if (points[i].x > maxX) { maxX = points[i].x; }
+				if (points[i].x < minX) { minX = points[i].x; }
+			}
+		}
+		else {
+			maxY = 0;
+			minY = 0;
+			maxX = 0;
+			minX = 0;
+		}
+	}
+
+	void plotPolygon(char** grid) {
+		for (unsigned int i = 0; i < points.GetSize(); i++) {
+			grid[points[i].y][points[i].x] = 1;
+		}
+	}
+
+	void printPolygon() {
+		string p = "Points : { ";
+		for (unsigned int i = 0; i < points.GetSize(); i++) {
+			p += points[i].ToString() + " ";
+		}
+		p += " }\n";
+
+		string e = "Edges : { ";
+		for (unsigned int i = 0; i < edges.GetSize(); i++) {
+			e += edges[i].ToString() + " ";
+		}
+		e += " }\n";
+
+		string a = "Angles : { ";
+		for (unsigned int i = 0; i < angles.GetSize(); i++) {
+			a += angles[i].ToString() + " ";
+		}
+		a += " }\n";
+
+		string r = "Width Range: {" + to_string(minX) + " - " + to_string(maxX)
+			+ "} | Height Range: {" + to_string(minY) + " - " + to_string(maxY) + "}\n";
+
+		string t = p + e + a + r;
+		cout << t << endl;
+	}
+	
+	
+	// way to determine if point intersects with an angle or if it just touches it
 };
 
 
@@ -260,6 +582,7 @@ protected:
 
 private: 
 
+	// possible optimization..
 	void FillInUntilEdge(const int& y, int& w) {
 		while (w < width && pattern[y][w] != 1) {
 			pattern[y][w] = 1;
@@ -280,45 +603,8 @@ protected:
 			this->scales[i] = scales[i];
 		}
 	}
-
-	Array<Coordinate> ComputeStraitLine(Coordinate c1, Coordinate c2) {
-		int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
-		double slope = 0;
-		double b = 0;
-		bool infSlope = false;
-
-		if ((c2.x - c1.x) == 0) {
-			infSlope = true;
-		}
-		else {
-			slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
-			b = c1.y - (slope * c1.x);
-		}
-
-		cout << "Slope Computation: " << (double)(c2.y - c1.y) << " / " << (double)(c2.x - c1.x) << endl;
-
-		Array<Coordinate> line;
-		int startY = (c2.y > c1.y) ? c1.y : c2.y;
-		Coordinate c;
-		double d;
-		for (int i = 0; i < numCoordinates; i += 1) {
-			c.y = i + startY;
-			c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
-			line.Add(c);
-			cout << c.ToString() << " : [" << slope << " , " << b << "]" << endl;
-		}
-		return line;
-	}
-
-	void PlotLines(Array<Array<Coordinate>> lines) {
-		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetSize(); j++) {
-				cout << lines[i][j].ToString() << endl;
-				pattern[lines[i][j].y][lines[i][j].x] = 1;
-			}
-		}
-	}
-
+		
+	// For round.. use for circle.. maybe
 	bool IsInsidePolygon(Coordinate c) {
 		int edges = 0;
 		int sp = width - 1;
@@ -334,70 +620,36 @@ protected:
 				}
 			}
 		}
+
 		return (((edges % 2) == 1));
 	}
 
-	bool IsEdge(Array<Array<Coordinate>>& lines, Coordinate c) {
-		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetSize(); j++) {
-				if (lines[i][j] == c) {
-					return true;
+	// For a true polygon
+	void FillInPolygon(const Polygon& p) {
+		Coordinate c;
+		for (unsigned int h = 0; h < height; h++) {
+			c.y = h;
+			for (unsigned int w = 0; w < width; w++) {
+				c.x = w;
+				if (p.isInsidePolygon(c)) {
+					pattern[h][w] = 1; // Could optimize by using fillInUntilEdge, but not general and may not be necesarry
 				}
 			}
 		}
-		return false;
 	}
 
-	// Alter this so that an edge can be any length of consecutive pixels
-	void FillInPolygon(Array<Array<Coordinate>>& lines) {
+	// for a not true polygon, though... a circle could just be a bunch of edges. we will see
+	void FillInPolygon() {
 		Coordinate c;
-		Array<Coordinate> edgePoints;
-		for (int i = 0; i < lines.GetSize(); i++) {
-			for (int j = 0; j < lines[i].GetSize(); j++) {
-				if (!edgePoints.exists(lines[i][j])) {
-					edgePoints.Add(lines[i][j]);
+		for (unsigned int h = 0; h < height; h++) {
+			c.y = h;
+			for (unsigned int w = 0; w < width; w++) {
+				c.x = w;
+				if (IsInsidePolygon(c)) {
+					pattern[h][w] = 1; // Could optimize by using fillInUntilEdge, but not general and may not be necesarry
 				}
 			}
 		}
-
-		int* edgeCount = new int[height];
-		for (int i = 0; i < height; i++) {
-			edgeCount[i] = 0;
-		}
-
-		edgePoints.sort();
-
-		if (edgePoints.GetSize() > 1) {
-
-			/* First point */
-			edgeCount[edgePoints[0].y] += 1;
-
-			/* remainder */
-			for (int i = 1; i < edgePoints.GetSize(); i++) {
-				if (edgePoints[i - 1].y == edgePoints[i].y) { /* if same height */
-					if (edgePoints[i - 1].x != (edgePoints[i].x - 1)) { /* if not right next to each other */
-						edgeCount[edgePoints[i].y] += 1;
-					}
-				}
-				else {
-					edgeCount[edgePoints[i].y] += 1;
-				}
-			}
-		}
-
-		for (int h = 0; h < height; h++) {
-			if ((edgeCount[h] > 1)) {
-				for (int w = 0; w < width; w++) {
-					c.y = h;
-					c.x = w;
-					if (IsInsidePolygon(c)) {
-						FillInUntilEdge(h, w);
-					}
-				}
-			}
-		}
-
-		delete[] edgeCount;
 	}
 
 	/* this.... shouldnt be used. */
@@ -434,6 +686,7 @@ protected:
 			}
 		}
 	}
+
 
 private:
 
@@ -583,13 +836,13 @@ private:
 		Coordinate rightMostPoint(centerHeight, centerWidth + widthRadius);
 
 		Array<Array<Coordinate>> arr;
-		arr.Add(ComputeStraitLine(highestPoint, leftMostPoint));
-		arr.Add(ComputeStraitLine(highestPoint, rightMostPoint));
-		arr.Add(ComputeStraitLine(lowestPoint, rightMostPoint));
-		arr.Add(ComputeStraitLine(lowestPoint, leftMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(highestPoint, leftMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(highestPoint, rightMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(lowestPoint, rightMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(lowestPoint, leftMostPoint));
 
-		PlotLines(arr);
-		FillInPolygon(arr);
+		//PlotLines(arr);
+		//FillInPolygon(arr);
 	}
 
 public:
@@ -662,8 +915,8 @@ private:
 		}
 		Array<Array<Coordinate>> lines;
 		lines.Add(c);
-		PlotLines(lines);
-		FillInPolygon(lines);
+		//PlotLines(lines);
+		//FillInPolygon(lines);
 		//FillInBruteForce(Coordinate(centerHeight, centerWidth));
 	}
 
@@ -699,12 +952,12 @@ private:
 		Coordinate rightMostPoint(centerHeight + heightRadius, centerWidth + widthRadius);
 
 		Array<Array<Coordinate>> arr;
-		arr.Add(ComputeStraitLine(highestPoint, leftMostPoint));
-		arr.Add(ComputeStraitLine(highestPoint, rightMostPoint));
-		arr.Add(ComputeStraitLine(rightMostPoint, leftMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(highestPoint, leftMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(highestPoint, rightMostPoint));
+		arr.Add(Polygon::ComputeStraitLine(rightMostPoint, leftMostPoint));
 
-		PlotLines(arr);
-		FillInPolygon(arr);
+		//PlotLines(arr);
+		//FillInPolygon(arr);
 	}
 
 public:
@@ -735,7 +988,7 @@ private:
 		GetCenter(height, width, centerHeight, centerWidth);					 // Detmine center coordinates
 		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
 		int halfRadius = radius / 2;
-		cout << radius << "," << halfRadius << endl;
+
 		/* Compute the pattern area */
 		Coordinate* c = new Coordinate[10];
 		c[0] = Coordinate(centerHeight - radius, centerWidth); // highest point
@@ -749,27 +1002,25 @@ private:
 		c[8] = Coordinate(centerHeight, centerWidth - radius);
 		c[9] = Coordinate(centerHeight - halfRadius, centerWidth - halfRadius);
 
-		for (int i = 0; i < 10; i++) {
-			cout << c[i].ToString() << endl;
-		}
-		cout << "------------------" << endl;
-
-		Array<Array<Coordinate>> edges;
-		edges.Add(ComputeStraitLine(c[0], c[1]));
-		edges.Add(ComputeStraitLine(c[1], c[2]));
-		edges.Add(ComputeStraitLine(c[2], c[3]));
-		edges.Add(ComputeStraitLine(c[3], c[4]));
-		edges.Add(ComputeStraitLine(c[4], c[5]));
-		edges.Add(ComputeStraitLine(c[5], c[6]));
-		edges.Add(ComputeStraitLine(c[6], c[7]));
-		edges.Add(ComputeStraitLine(c[7], c[8]));
-		edges.Add(ComputeStraitLine(c[8], c[9]));
-		edges.Add(ComputeStraitLine(c[9], c[0]));
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[3]));
+		edges.Add(Edge(c[3], c[4]));
+		edges.Add(Edge(c[4], c[5]));
+		edges.Add(Edge(c[5], c[6]));
+		edges.Add(Edge(c[6], c[7]));
+		edges.Add(Edge(c[7], c[8]));
+		edges.Add(Edge(c[8], c[9]));
+		edges.Add(Edge(c[9], c[0]));
 
 		delete[] c;
 
-		PlotLines(edges);
-		FillInPolygon(edges);
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+
+		p.printPolygon();
 	}
 
 public:
@@ -910,14 +1161,16 @@ public:
 };
 
 int main()
-{	string fName = "C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\Outfile.txt";
+{		
+	
+	string fName = "C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\Outfile.txt";
 
 	Pattern P;
 
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern* sq = new StarPattern(100, 100, 0.7);
+	UnitPattern* sq = new StarPattern(50, 50, 0.7);
 		//new TrianglePattern(100, 100, 0.12, 0.96);
 		//new CirclePattern(100, 100, 1.0);
 		//new DiamondPattern(100, 100, 0.5, 0.5);  
@@ -930,11 +1183,6 @@ int main()
 
 
 	outFile.close();
-
-
-
-	
-
 
 	return 0;
 }
