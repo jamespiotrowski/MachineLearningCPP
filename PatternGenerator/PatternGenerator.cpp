@@ -1,14 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 #include "BitMap.h"
 using namespace std;
+
+#define M_PI 3.141592653589793;
 
 #define SCALES_SQUARE 1
 #define SCALES_DIAMOND 2
 #define SCALES_CIRCLE 1
 #define SCALES_TRIANGLE 2
 #define SCALES_STAR 1
+#define SCALES_PENTAGON 1
 
 /**********************************************************************************************
 ###############################################################################################
@@ -399,33 +403,55 @@ public:
 	}
 
 	static Array<Coordinate> ComputeStraitLine(Coordinate c1, Coordinate c2) {
-		int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
-		double slope = 0;
-		double b = 0;
-		bool infSlope = false;
-
-		if ((c2.x - c1.x) == 0) {
-			infSlope = true;
+		Array<Coordinate> line;
+		if (c1.y == c2.y) {
+			int greaterX = (c2.x > c1.x) ? c2.x : c1.x;
+			int lesserX = (c2.x > c1.x) ? c1.x : c2.x;
+			for (unsigned int i = lesserX + 1; i < greaterX; i++) {
+				line.Add(Coordinate(c2.y, i));
+			}
 		}
 		else {
-			slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
-			b = c1.y - (slope * c1.x);
-		}
+			int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
+			double slope = 0;
+			double b = 0;
+			bool infSlope = false;
 
-		Array<Coordinate> line;
-		int startY = (c2.y > c1.y) ? c1.y : c2.y;
-		Coordinate c;
-		double d;
-		for (int i = 0; i < numCoordinates; i += 1) {
-			c.y = i + startY;
-			c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
-			line.Add(c);
-		}
+			if ((c2.x - c1.x) == 0) {
+				infSlope = true;
+			}
+			else {
+				slope = (double)(c2.y - c1.y) / (double)(c2.x - c1.x);
+				b = c1.y - (slope * c1.x);
+			}
 
+			int startY = (c2.y > c1.y) ? c1.y : c2.y;
+			Coordinate c;
+			double d;
+			for (int i = 0; i < numCoordinates; i += 1) {
+				c.y = i + startY;
+				c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
+				line.Add(c);
+			}
+		}
 		if (!line.exists(c1)) { line.Add(c1); }
 		if (!line.exists(c2)) { line.Add(c2); }
-
 		return line;
+	}
+
+	// Angle from the x = 0 line
+	static Coordinate ComputePointGivenAngleAndDistance(double angle, double distance, Coordinate startingPoint) {
+		double piCalc = angle * M_PI;
+		piCalc = piCalc / 180.0;
+		double x = startingPoint.x + (distance * sin(piCalc));
+		double y = startingPoint.y + (distance * cos(piCalc));
+		return Coordinate(RoundDouble(y), RoundDouble(x));
+	}
+
+	static Coordinate ComputeCentroid(Coordinate c1, Coordinate c2, Coordinate c3) {
+		double new_x = ((double)(c1.x + c2.x + c3.x)) / 3.0;
+		double new_y = ((double)(c1.y + c2.y + c3.y)) / 3.0;
+		return Coordinate((int)new_y, (int)new_x);
 	}
 
 	static bool inLineWithAngle(const Coordinate& c, const Angle& a) {
@@ -979,28 +1005,80 @@ public:
 #####
 ###############################################################################################
 **********************************************************************************************/
+class PentagonPattern : public UnitPattern {
+private:
+	const int scale1 = 0; // Scale that square uses
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x);					 // Detmine center coordinates
+		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
+
+		double split = 360.0 / 5.0;
+
+		/* Compute the pattern area */
+		Coordinate* c = new Coordinate[5];
+		c[0] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (0.0 * split), radius, centerCoord);
+		c[1] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (1.0 * split), radius, centerCoord);
+		c[2] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (2.0 * split), radius, centerCoord);
+		c[3] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (3.0 * split), radius, centerCoord);
+		c[4] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (4.0 * split), radius, centerCoord);
+
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[3]));
+		edges.Add(Edge(c[3], c[4]));
+		edges.Add(Edge(c[4], c[0]));
+
+		delete[] c;
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+
+		p.printPolygon();
+	}
+
+public:
+
+	PentagonPattern(int height, int width, double scale) : UnitPattern(height, width) {
+		SetScale(SCALES_PENTAGON, &scale);
+		GenerateUnitPattern();
+	}
+
+};
+
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
 class StarPattern : public UnitPattern {
 private:
 	const int scale1 = 0; // Scale that square uses
 
 	void GenerateUnitPattern() {
-		int centerHeight = 0, centerWidth = 0;
-		GetCenter(height, width, centerHeight, centerWidth);					 // Detmine center coordinates
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x);					 // Detmine center coordinates
 		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
-		int halfRadius = radius / 2;
+
+		double split = 360.0 / 5.0;
 
 		/* Compute the pattern area */
 		Coordinate* c = new Coordinate[10];
-		c[0] = Coordinate(centerHeight - radius, centerWidth); // highest point
-		c[1] = Coordinate(centerHeight - halfRadius, centerWidth + halfRadius);
-		c[2] = Coordinate(centerHeight, centerWidth + radius);
-		c[3] = Coordinate(centerHeight + halfRadius, centerWidth + halfRadius);
-		c[4] = Coordinate(centerHeight + radius, centerWidth + halfRadius);
-		c[5] = Coordinate(centerHeight + halfRadius, centerWidth);
-		c[6] = Coordinate(centerHeight + radius, centerWidth - halfRadius);
-		c[7] = Coordinate(centerHeight + halfRadius , centerWidth - halfRadius);
-		c[8] = Coordinate(centerHeight, centerWidth - radius);
-		c[9] = Coordinate(centerHeight - halfRadius, centerWidth - halfRadius);
+		c[0] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (0.0 * split), radius, centerCoord);
+		c[2] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (1.0 * split), radius, centerCoord);
+		c[4] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (2.0 * split), radius, centerCoord);
+		c[6] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (3.0 * split), radius, centerCoord);
+		c[8] = Polygon::ComputePointGivenAngleAndDistance(180.0 + (4.0 * split), radius, centerCoord);
+
+		c[1] = Polygon::ComputeCentroid(c[0], c[2], centerCoord);
+		c[3] = Polygon::ComputeCentroid(c[2], c[4], centerCoord);
+		c[5] = Polygon::ComputeCentroid(c[4], c[6], centerCoord);
+		c[7] = Polygon::ComputeCentroid(c[6], c[8], centerCoord);
+		c[9] = Polygon::ComputeCentroid(c[8], c[0], centerCoord);
+
 
 		Array<Edge> edges;
 		edges.Add(Edge(c[0], c[1]));
@@ -1170,7 +1248,9 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern* sq = new StarPattern(50, 50, 0.7);
+	UnitPattern* sq = 
+		//new PentagonPattern(50, 50, 0.7);
+		new StarPattern(150, 150, 0.7);
 		//new TrianglePattern(100, 100, 0.12, 0.96);
 		//new CirclePattern(100, 100, 1.0);
 		//new DiamondPattern(100, 100, 0.5, 0.5);  
