@@ -13,6 +13,7 @@ using namespace std;
 #define SCALES_TRIANGLE 2
 #define SCALES_STAR 1
 #define SCALES_PENTAGON 1
+#define SCALES_STRIPE 1
 
 /**********************************************************************************************
 ###############################################################################################
@@ -451,7 +452,7 @@ public:
 	static Coordinate ComputeCentroid(Coordinate c1, Coordinate c2, Coordinate c3) {
 		double new_x = ((double)(c1.x + c2.x + c3.x)) / 3.0;
 		double new_y = ((double)(c1.y + c2.y + c3.y)) / 3.0;
-		return Coordinate((int)new_y, (int)new_x);
+		return Coordinate(RoundDouble(new_y), RoundDouble(new_x));
 	}
 
 	static bool inLineWithAngle(const Coordinate& c, const Angle& a) {
@@ -631,7 +632,7 @@ protected:
 	}
 		
 	// For round.. use for circle.. maybe
-	bool IsInsidePolygon(Coordinate c) {
+	bool IsInsidePolygon(Coordinate c, const Array<Coordinate>& loneEdgePoints) {
 		int edges = 0;
 		int sp = width - 1;
 		for (int w = c.x; w < width; w += 1) {
@@ -644,6 +645,12 @@ protected:
 				if (pattern[c.y][w] == 1 && pattern[c.y][w - 1] != 1) {
 					edges += 1;
 				}
+			}
+		}
+
+		for (unsigned int i = 0; i < loneEdgePoints.GetSize(); i++) {
+			if (loneEdgePoints.At(i).y == c.y && loneEdgePoints.At(i).x >= c.x) {
+				edges -= 1;
 			}
 		}
 
@@ -665,13 +672,13 @@ protected:
 	}
 
 	// for a not true polygon, though... a circle could just be a bunch of edges. we will see
-	void FillInPolygon() {
+	void FillInPolygon(const Array<Coordinate> &loneEdgePoints) {
 		Coordinate c;
 		for (unsigned int h = 0; h < height; h++) {
 			c.y = h;
 			for (unsigned int w = 0; w < width; w++) {
 				c.x = w;
-				if (IsInsidePolygon(c)) {
+				if (IsInsidePolygon(c, loneEdgePoints)) {
 					pattern[h][w] = 1; // Could optimize by using fillInUntilEdge, but not general and may not be necesarry
 				}
 			}
@@ -823,12 +830,25 @@ private:
 		int startWidth = centerWidth - radius;
 		int endHeight = centerHeight + radius;
 		int endWidth = centerWidth + radius;
-		/* Plot pattern */
-		for (int i = startHeight; i <= endHeight; i++) {
-			for (int j = startWidth; j <= endWidth; j++) {
-				pattern[i][j] = 1;
-			}
-		}
+
+		/* Compute the pattern area */
+		Coordinate* c = new Coordinate[4];
+		c[0] = Coordinate(startHeight, startWidth);
+		c[1] = Coordinate(startHeight, endWidth);
+		c[2] = Coordinate(endHeight, endWidth);
+		c[3] = Coordinate(endHeight, startWidth);
+
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[3]));
+		edges.Add(Edge(c[3], c[0]));
+
+		delete[] c;
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
 	}
 
 public:
@@ -855,20 +875,25 @@ private:
 		GetCenter(height, width, centerHeight, centerWidth); // Detmine center coordinates
 		int widthRadius = (scales[widthScale] * width) / 2;
 		int heightRadius = (scales[heightScale] * height) / 2;
+
 		/* Compute the pattern area */
-		Coordinate highestPoint(centerHeight + heightRadius, centerWidth);
-		Coordinate lowestPoint(centerHeight - heightRadius, centerWidth);
-		Coordinate leftMostPoint(centerHeight, centerWidth - widthRadius);
-		Coordinate rightMostPoint(centerHeight, centerWidth + widthRadius);
+		Coordinate* c = new Coordinate[4];
+		c[0] = Coordinate(centerHeight + heightRadius, centerWidth);
+		c[1] = Coordinate(centerHeight, centerWidth - widthRadius);
+		c[2] = Coordinate(centerHeight - heightRadius, centerWidth);
+		c[3] = Coordinate(centerHeight, centerWidth + widthRadius);
 
-		Array<Array<Coordinate>> arr;
-		arr.Add(Polygon::ComputeStraitLine(highestPoint, leftMostPoint));
-		arr.Add(Polygon::ComputeStraitLine(highestPoint, rightMostPoint));
-		arr.Add(Polygon::ComputeStraitLine(lowestPoint, rightMostPoint));
-		arr.Add(Polygon::ComputeStraitLine(lowestPoint, leftMostPoint));
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[3]));
+		edges.Add(Edge(c[3], c[0]));
 
-		//PlotLines(arr);
-		//FillInPolygon(arr);
+		delete[] c;
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
 	}
 
 public:
@@ -935,15 +960,84 @@ private:
 			}
 		}
 
-		Array<Coordinate> c;
-		for (int i = 0; i < circlePoints.GetSize(); i++) {
-			c.Add(circlePoints[i]);
+		Array<int> edgePointCounter;
+		for (unsigned int i = 0; i < height; i++) {
+			edgePointCounter.Add(0);
 		}
-		Array<Array<Coordinate>> lines;
-		lines.Add(c);
-		//PlotLines(lines);
-		//FillInPolygon(lines);
-		//FillInBruteForce(Coordinate(centerHeight, centerWidth));
+
+		for (int i = 0; i < circlePoints.GetSize(); i++) {
+			edgePointCounter[circlePoints[i].y] += 1;
+			pattern[circlePoints[i].y][circlePoints[i].x] = 1;
+		}
+
+		int minHeight = 0, maxHeight = 0;
+		for (unsigned int i = 0; i < edgePointCounter.GetSize(); i++) {
+			if (edgePointCounter[i] >= 1) {
+				minHeight = i;
+				break;
+			}
+		}
+
+		
+
+		for (int i = ((int)edgePointCounter.GetSize()) - 1; i >= 0; i--) {
+			if (edgePointCounter[i] >= 1) {
+				maxHeight = i;
+				break;
+			}
+		}
+
+		bool foundMinCoord = false, foundMaxCoord = false;
+		Coordinate minCoordinate;
+		Coordinate maxCoordinate;
+		for (unsigned int j = 0; j < circlePoints.GetSize(); j++) {
+
+			if (minHeight == circlePoints[j].y) {
+				if (foundMinCoord) {
+					if (minCoordinate.x > circlePoints[j].x) {
+						minCoordinate = circlePoints[j];
+					}
+				}
+				else {
+					minCoordinate = circlePoints[j];
+					foundMinCoord = true;
+				}
+			}
+
+			if (maxHeight == circlePoints[j].y) {
+				if (foundMaxCoord) {
+					if (maxCoordinate.x > circlePoints[j].x) {
+						maxCoordinate = circlePoints[j];
+					}
+				}
+				else {
+					maxCoordinate = circlePoints[j];
+					foundMaxCoord = true;
+				}
+			}
+		
+		}
+
+		Array<Coordinate> loneEdgePoints;
+		loneEdgePoints.Add(minCoordinate);
+		loneEdgePoints.Add(maxCoordinate);
+
+		/*
+		for (unsigned int i = 0; i < edgePointCounter.GetSize(); i++) {
+			if (edgePointCounter[i] == 1) {
+				for (unsigned int j = 0; j < circlePoints.GetSize(); j++) {
+					if (i == circlePoints[j].y) {
+						loneEdgePoints.Add(circlePoints[j]);
+						break;
+					}
+				}
+			}
+		}
+		*/
+
+		
+
+		FillInPolygon(loneEdgePoints);
 	}
 
 public:
@@ -973,17 +1067,25 @@ private:
 		int widthRadius = (scales[widthScale] * width) / 2;
 		int heightRadius = (scales[heightScale] * height) / 2;
 		/* Compute the pattern area */
-		Coordinate highestPoint(centerHeight - heightRadius, centerWidth);
-		Coordinate leftMostPoint(centerHeight + heightRadius, centerWidth - widthRadius);
-		Coordinate rightMostPoint(centerHeight + heightRadius, centerWidth + widthRadius);
+		Coordinate highestPoint;
+		Coordinate leftMostPoint;
+		Coordinate rightMostPoint;
+		/* Compute the pattern area */
+		Coordinate* c = new Coordinate[3];
+		c[0] = Coordinate(centerHeight - heightRadius, centerWidth);
+		c[1] = Coordinate(centerHeight + heightRadius, centerWidth - widthRadius);
+		c[2] = Coordinate(centerHeight + heightRadius, centerWidth + widthRadius);
 
-		Array<Array<Coordinate>> arr;
-		arr.Add(Polygon::ComputeStraitLine(highestPoint, leftMostPoint));
-		arr.Add(Polygon::ComputeStraitLine(highestPoint, rightMostPoint));
-		arr.Add(Polygon::ComputeStraitLine(rightMostPoint, leftMostPoint));
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[0]));;
 
-		//PlotLines(arr);
-		//FillInPolygon(arr);
+		delete[] c;
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
 	}
 
 public:
@@ -1036,8 +1138,6 @@ private:
 		Polygon p(edges);
 		p.plotPolygon(pattern);
 		FillInPolygon(p);
-
-		p.printPolygon();
 	}
 
 public:
@@ -1110,6 +1210,49 @@ public:
 
 };
 
+/**********************************************************************************************
+###############################################################################################
+#####
+###############################################################################################
+**********************************************************************************************/
+class HorizontalStripe : public UnitPattern {
+private:
+	const int scale1 = 0; // Scale that square uses
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x);					 // Detmine center coordinates
+		int radius = (scales[scale1] * ((height < width) ? height : width)) / 2; // Determine squares "radius" using minimum dimention of unit
+	
+		/* Compute the pattern area */
+		Coordinate* c = new Coordinate[4];
+		c[0] = Coordinate(centerCoord.y + radius, 0);
+		c[1] = Coordinate(centerCoord.y - radius, 0);
+		c[2] = Coordinate(centerCoord.y - radius, height - 1);
+		c[3] = Coordinate(centerCoord.y + radius, height - 1);
+
+
+		Array<Edge> edges;
+		edges.Add(Edge(c[0], c[1]));
+		edges.Add(Edge(c[1], c[2]));
+		edges.Add(Edge(c[2], c[3]));
+		edges.Add(Edge(c[3], c[0]));
+
+		delete[] c;
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+	}
+
+public:
+
+	HorizontalStripe(int height, int width, double scale) : UnitPattern(height, width) {
+		SetScale(SCALES_STRIPE, &scale);
+		GenerateUnitPattern();
+	}
+
+};
 
 /**********************************************************************************************
 ###############################################################################################
@@ -1248,15 +1391,15 @@ int main()
 	ofstream outFile;
 	outFile.open(fName);
 
-	UnitPattern* sq = 
+	UnitPattern* sq = //new HorizontalStripe(50, 50, 0.8);
 		//new PentagonPattern(50, 50, 0.7);
-		new StarPattern(150, 150, 0.7);
-		//new TrianglePattern(100, 100, 0.12, 0.96);
-		//new CirclePattern(100, 100, 1.0);
+		new StarPattern(150, 150, 0.95);
+		//new TrianglePattern(100, 100, 0.50, 0.50);
+		//new CirclePattern(100, 100, 0.99);
 		//new DiamondPattern(100, 100, 0.5, 0.5);  
+		//new SquarePattern(100, 100, 0.95);
 	sq->PrintPattern(outFile);
 	P = Pattern(1000, 2000 , 0, 0, sq);
-	//P.PrintPattern(outFile);
 	delete sq;
 
 	P.SavePatternToBmp("C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\Outfile.bmp");
