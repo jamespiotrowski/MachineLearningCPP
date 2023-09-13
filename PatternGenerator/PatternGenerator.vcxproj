@@ -131,7 +131,11 @@
     <ClCompile Include="PatternGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Array.h" />
     <ClInclude Include="BitMap.h" />
+    <ClInclude Include="Combination.h" />
+    <ClInclude Include="Pattern.h" />
+    <ClInclude Include="Polygon.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

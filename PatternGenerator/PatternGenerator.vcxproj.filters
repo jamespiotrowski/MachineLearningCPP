@@ -26,5 +26,17 @@
     <ClInclude Include="BitMap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Pattern.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Array.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Combination.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
