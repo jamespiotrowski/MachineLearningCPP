@@ -37,7 +37,7 @@ private:
 
 	int allowedNumberOfScales = 0;
 
-	const int minPixelsAllowed = 20;
+	const int minPixelsAllowed = 25;
 	const int maximumPossibleScales = 8;
 
 	bool clipping = false;
@@ -123,6 +123,10 @@ private:
 		case(HEPTAGON): { return new HeptagonPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
 		case(STAR): { return new StarPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
 		case(OCTAGON): { return new OctogonPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
+		case(TRAPEZOID): { return new TrapezoidPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
+		case(HEART): { return new HeartPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
+		case(CROSS): { return new CrossPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
+		case(CRESCENT): { return new CrescentPattern(unitPatternHeight, unitPatternWidth, scaleSet); }
 		}
 		return nullptr;
 	}
@@ -153,11 +157,6 @@ private:
 	}
 
 	Pattern GetPattern(int pattern, const int& verticalOffset, const int& horizontalOffset, const Array<int>& combination) const {
-		//string s = "";
-		//for (int j = 0; j < combination.GetSize(); j++) {
-		//	s = s + to_string(combination.At(j)) + " ";
-		//}
-		//cout << s << endl;
 		return Pattern(patternHeight, patternWidth, verticalOffset, horizontalOffset, clipping, center, unitPatterns.At(pattern), combination);
 	}
 
@@ -167,27 +166,65 @@ private:
 
 	void GenerateAllUnitPatterns() {
 
+		/* Reset the object */
 		deallocateAllUnitPattens();
 
+		/* Get all scales to iterate through */
 		Array<double> scales;
 		for (double s = minScale; s < maxScale; s += scaleStep) {
 			scales.Add(s);
 		}
 
+		/* Set up an array to store all unit patterns */
 		for (int p = 0; p < patternList.GetSize(); p++) {
 			Array<UnitPattern*> unitPatternSet;
 			unitPatterns.Add(unitPatternSet);
 		}
 
+		/* Make an array to store scales - will need enough space for maximum possible scales
+			- At the time of 2023-09-18, the max scales required for a unit pattern is 8 (octogon) 
+		*/
 		double* scaleForPattern = new double[maximumPossibleScales];
+
+		/* For all scales */
 		for (int i = 0; i < scales.GetSize(); i++) {
-			// All scales are the same here - for now
+			
+			/* default all scales to be the same 
+				- This code my change for future iterations of the project
+			*/
 			for (int j = 0; j < maximumPossibleScales; j++) {
 				scaleForPattern[j] = scales[i];
 			}
 
+			/* Make a pattern for all pattern types that will be unique with any scale */
 			for (int p = 0; p < patternList.GetSize(); p++) {
-				unitPatterns[p].Add(GetUnitPattern(patternList[p], scaleForPattern));
+				if (!SpecialProcessing(patternList[p])) {
+					unitPatterns[p].Add(GetUnitPattern(patternList[p], scaleForPattern));
+				}
+			}
+
+			/* Make a pattern for all pattern types that will NOT be unique with any scale */
+			/* This solution is obviously very hardcoded but will be necesarry for now */
+			for (int p = 0; p < patternList.GetSize(); p++) {
+				if (SpecialProcessing(patternList[p])) {
+					switch (patternList[p]) {
+					case(RECTANGLE): {
+						scaleForPattern[1] = 0.5 * scaleForPattern[0];
+						break;
+					}
+					case(TRAPEZOID): {
+						scaleForPattern[1] = 0.5 * scaleForPattern[0];
+						scaleForPattern[2] = 0.5 * scaleForPattern[0];
+						break;
+					}
+					case(CRESCENT): {
+						scaleForPattern[1] = 0.55 * scaleForPattern[0];
+						break;
+					}
+					default: { break; }
+					}
+					unitPatterns[p].Add(GetUnitPattern(patternList[p], scaleForPattern));
+				}
 			}
 		}
 
@@ -236,22 +273,15 @@ public:
 		int horizontalOffset = 25;
 		for (int currentPattern = 0; currentPattern < patternList.GetSize(); currentPattern++) {
 			Array<Array<int>> allCombinations = GetPatternCombinations(currentPattern, verticalOffset, horizontalOffset);
-			//cout << allCombinations.GetSize() << endl;
 			int tImgs = 0;
 			string outputFile;
 			string currentPatternString = GetNameForPattern(patternList.At(currentPattern));
 			for (int i = 0; i < allCombinations.GetSize(); i++) {
-				/*string s = "";
-				for (int j = 0; j < allCombinations[i].GetSize(); j++) {
-					s = s + to_string(allCombinations[i][j]) + " ";
-				}
-				cout << s << endl;*/
 				Pattern p = GetPattern(currentPattern, verticalOffset, horizontalOffset, allCombinations[i]);
 				outputFile = outputDirectory + currentPatternString + "_" + to_string(tImgs) + ".bmp";
 				p.SavePatternToBmp(outputFile);
 				tImgs += 1;
 			}
-			//cout << "Done!" << endl;
 		}
 	}
 
@@ -311,19 +341,25 @@ int main()
 		cout << s << endl;
 	}
 	*/
+
+	//patternList.Add(VERTICAL_STRIPES);
+	//patternList.Add(HORIZONTAL_STRIPES);
+
 	Array<PatternType> patternList;
 	patternList.Add(SQUARE);
-	//patternList.Add(RECTANGLE);	
+	patternList.Add(RECTANGLE);
+	patternList.Add(TRAPEZOID);
 	patternList.Add(TRIANGLE);
 	patternList.Add(PENTAGON);
 	patternList.Add(STAR);
-	//patternList.Add(VERTICAL_STRIPES);
-	//patternList.Add(HORIZONTAL_STRIPES);
 	patternList.Add(CIRCLE);
 	patternList.Add(DIAMOND);
 	patternList.Add(HEXAGON);
 	patternList.Add(OCTAGON);
 	patternList.Add(HEPTAGON);
+	patternList.Add(HEART);
+	patternList.Add(CROSS);
+	patternList.Add(CRESCENT);
 
 	PatternGenerator pg(
 		patternList
@@ -338,7 +374,7 @@ int main()
 		, "C:\\Users\\james\\Code\\CPP\\MachineLearningCPP\\MachineLearningCPP\\PatternGenerator\\Output\\" // Output Directory
 		, false	// clipping
 		, true	// center
-		, 0.01	// percentage of combinations to keep
+		, 0.02	// percentage of combinations to keep
 	);
 
 	pg.MakePatterns();

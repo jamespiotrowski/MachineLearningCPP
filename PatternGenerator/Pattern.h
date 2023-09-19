@@ -5,6 +5,13 @@
 
 using namespace std;
 
+/**********************************************************************************************
+###############################################################################################
+##### Pattern utilities
+###############################################################################################
+**********************************************************************************************/
+
+/* enumerator for all patterns */
 enum PatternType
 {
 	SQUARE
@@ -19,13 +26,18 @@ enum PatternType
 	, HEPTAGON
 	, STAR
 	, OCTAGON
+	, TRAPEZOID
+	, HEART
+	, CROSS
+	, CRESCENT
 };
 
+/* Helper function to return the number of scales a pattern requires */
 int GetScalesForPattern(const PatternType &pt) {
 	switch (pt) {
-	case(SQUARE): case(HORIZONTAL_STRIPES): case(VERTICAL_STRIPES): case(CIRCLE): case(STAR) : { return 1;}
-	case(RECTANGLE): case(DIAMOND): { return 2; }
-	case(TRIANGLE): { return 3; }
+	case(SQUARE): case(HORIZONTAL_STRIPES): case(VERTICAL_STRIPES): case(CIRCLE): case(STAR) : case(HEART): { return 1;}
+	case(RECTANGLE): case(DIAMOND): case(CROSS): case(CRESCENT): { return 2; }
+	case(TRIANGLE): case(TRAPEZOID): { return 3; }
 	case(PENTAGON): { return 5; }
 	case(HEXAGON): { return 6; }
 	case(HEPTAGON): { return 7; }
@@ -35,6 +47,7 @@ int GetScalesForPattern(const PatternType &pt) {
 	return 0;
 }
 
+/* Helper function to get the name of a pattern as a string */
 string GetNameForPattern(const PatternType& pt) {
 	switch (pt) {
 	case(SQUARE): { return "Square"; }
@@ -49,9 +62,35 @@ string GetNameForPattern(const PatternType& pt) {
 	case(HEXAGON): { return "Hexagon"; }
 	case(HEPTAGON): { return "Heptagon"; }
 	case(OCTAGON): { return "Octogon"; }
+	case(TRAPEZOID): { return "Trapezoid"; }
+	case(HEART): { return "Heart"; }
+	case(CROSS): { return "Cross"; }
+	case(CRESCENT): { return "Crescent"; }
 	default: { return ""; }
 	}
 	return "";
+}
+
+/* 
+
+	Helper function to determine if a shape (pattern) will be unique for all scales
+
+	For example, a Square is also a rectangle and a trapezoid
+	A rectangle is also a trapezoid. 
+
+	When generating patterns, i will need to flag certain patterns to indicate that 
+	any scale may not be appropriate to use for this pattern
+
+	Currently stripes are excluded from this because they will not be used in the first
+	iteration of this project
+
+*/
+bool SpecialProcessing(const PatternType& pt) {
+	switch(pt){
+	case(RECTANGLE): case(TRAPEZOID): { return true; }
+	default: { return false; }
+	}
+	return false;
 }
 
 /**********************************************************************************************
@@ -452,8 +491,6 @@ private:
 			}
 		}
 
-
-
 		for (int i = ((int)edgePointCounter.GetSize()) - 1; i >= 0; i--) {
 			if (edgePointCounter[i] >= 1) {
 				maxHeight = i;
@@ -516,8 +553,6 @@ public:
 **********************************************************************************************/
 class TrianglePattern : public UnitPattern {
 private:
-	const int widthScale = 0;
-	const int heightScale = 1;
 
 	void GenerateUnitPattern() {
 		Coordinate centerCoord;
@@ -527,17 +562,10 @@ private:
 		horizontalOffsetAllowed = true;
 
 		double t = ((height < width) ? height : width) / 2;
-		//t = t * t;
-		//t = t + t;
-		//t = sqrt(t);
 
 		int sides = 3;
 
 		double split = 360.0 / sides;
-
-		//cout << t << endl;
-		//cout << scales[0] * t << endl;
-		//cout << scales[0] << endl;
 
 		Array<Coordinate> c;
 		for (int i = 0; i < sides; i++) {
@@ -571,7 +599,6 @@ public:
 **********************************************************************************************/
 class PentagonPattern : public UnitPattern {
 private:
-	const int scale1 = 0; // Scale that square uses
 
 	void GenerateUnitPattern() {
 		Coordinate centerCoord;
@@ -581,9 +608,6 @@ private:
 		horizontalOffsetAllowed = true;
 
 		double t = ((height < width) ? height : width) / 2;
-		//t = t * t;
-		//t = t + t;
-		//t = sqrt(t);
 
 		int sides = 5;
 
@@ -836,7 +860,6 @@ public:
 **********************************************************************************************/
 class HexagonPattern : public UnitPattern {
 private:
-	const int scale1 = 0; // Scale that square uses
 
 	void GenerateUnitPattern() {
 		Coordinate centerCoord;
@@ -886,7 +909,6 @@ public:
 **********************************************************************************************/
 class HeptagonPattern : public UnitPattern {
 private:
-	const int scale1 = 0; // Scale that square uses
 
 	void GenerateUnitPattern() {
 		Coordinate centerCoord;
@@ -896,9 +918,6 @@ private:
 		horizontalOffsetAllowed = true;
 
 		double t = ((height < width) ? height : width) / 2;
-		//t = t * t;
-		//t = t + t;
-		//t = sqrt(t);
 
 		int sides = 7;
 
@@ -936,7 +955,6 @@ public:
 **********************************************************************************************/
 class OctogonPattern : public UnitPattern {
 private:
-	const int scale1 = 0; // Scale that square uses
 
 	void GenerateUnitPattern() {
 		Coordinate centerCoord;
@@ -946,9 +964,6 @@ private:
 		horizontalOffsetAllowed = true;
 
 		double t = ((height < width) ? height : width) / 2;
-		//t = t * t;
-		//t = t + t;
-		//t = sqrt(t);
 
 		int sides = 8;
 
@@ -978,6 +993,319 @@ public:
 
 };
 
+
+/**********************************************************************************************
+###############################################################################################
+##### TRAPEZOID
+###############################################################################################
+**********************************************************************************************/
+class TrapezoidPattern : public UnitPattern {
+private:
+	const int width1Scale = 0;
+	const int width2Scale = 1;
+	const int heightScale = 2;
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x); // Detmine center coordinates
+
+		verticalOffsetAllowed = true;
+		horizontalOffsetAllowed = true;
+
+		// Get the smallest dimension / 2
+		int t = ((height < width) ? height : width) / 2;
+
+		// Compute scales for top, bottom, height
+		int bottomWidth = scales[width1Scale] * t;
+		int topWidth = scales[width2Scale] * t;
+		int tHeight = scales[heightScale] * t;
+	
+		// Edges for trapezoid
+		Array<Edge> edges;
+		edges.Add(Edge(Coordinate(centerCoord.y - tHeight, centerCoord.x - topWidth), Coordinate(centerCoord.y - tHeight, centerCoord.x + topWidth)));
+		edges.Add(Edge(Coordinate(centerCoord.y - tHeight, centerCoord.x + topWidth), Coordinate(centerCoord.y + tHeight, centerCoord.x + bottomWidth)));
+		edges.Add(Edge(Coordinate(centerCoord.y + tHeight, centerCoord.x + bottomWidth), Coordinate(centerCoord.y + tHeight, centerCoord.x - bottomWidth)));
+		edges.Add(Edge(Coordinate(centerCoord.y + tHeight, centerCoord.x - bottomWidth), Coordinate(centerCoord.y - tHeight, centerCoord.x - topWidth)));
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+	}
+
+public:
+
+	TrapezoidPattern(int height, int width, const double* s) : UnitPattern(height, width, TRAPEZOID) {
+		SetScale(GetScalesForPattern(patternType), s);
+		GenerateUnitPattern();
+	}
+
+};
+
+
+/**********************************************************************************************
+###############################################################################################
+##### HEART
+###############################################################################################
+**********************************************************************************************/
+class HeartPattern : public UnitPattern {
+private:
+	const int s1 = 0;
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x); // Detmine center coordinates
+
+		verticalOffsetAllowed = true;
+		horizontalOffsetAllowed = true;
+
+		// Get the smallest dimension / 2
+		double t = ((height < width) ? height : width) / 2;
+
+		// Compute scales for top, bottom, height
+		double halfRadius = t * scales[s1];
+		double td2 = halfRadius / 2.0;
+		
+		// Coordinates
+		Coordinate centerFanCoord;
+		int sidesPerFan = 15;
+		double split = 360.0 / sidesPerFan;
+		double currentAngle = 0;
+		Array<Coordinate> c;
+		/*************/
+		//c.Add(Coordinate(centerCoord.y - (0.50 * halfRadius), centerCoord.x));						// The upper middle point
+		/*************/
+		c.Add(Coordinate(centerCoord.y + halfRadius, centerCoord.x));
+		/* RIGHT FAN */
+		centerFanCoord = Coordinate(centerCoord.y - td2, centerCoord.x + td2);
+		for (currentAngle = 220; currentAngle < 360; currentAngle += split) {
+			c.Add(Polygon::ComputePointGivenAngleAndDistance(180.0 + currentAngle, td2, centerFanCoord));
+		}
+		for (currentAngle = 0; currentAngle < 90; currentAngle += split) {
+			c.Add(Polygon::ComputePointGivenAngleAndDistance(180.0 + currentAngle, td2, centerFanCoord));
+		}						// The bottom middle point 
+		/* LEFT FAN */
+		centerFanCoord = Coordinate(centerCoord.y - td2, centerCoord.x - td2);
+		for (currentAngle = 270; currentAngle < 360; currentAngle += split) {
+			c.Add(Polygon::ComputePointGivenAngleAndDistance(180.0 + currentAngle, td2, centerFanCoord));
+		}
+		for (currentAngle = 0; currentAngle <= 140; currentAngle += split) {
+			c.Add(Polygon::ComputePointGivenAngleAndDistance(180.0 + currentAngle, td2, centerFanCoord));
+		}
+		/*************/
+
+		// Edges 
+		Array<Edge> edges;
+		for (int i = 0; i < c.GetSize(); i++) {
+			edges.Add(Edge(c[i], c[ (i+1) % c.GetSize() ]));
+		}
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+	}
+
+public:
+
+	HeartPattern(int height, int width, const double* s) : UnitPattern(height, width, HEART) {
+		SetScale(GetScalesForPattern(patternType), s);
+		GenerateUnitPattern();
+	}
+
+};
+
+
+/**********************************************************************************************
+###############################################################################################
+##### CROSS
+###############################################################################################
+**********************************************************************************************/
+class CrossPattern : public UnitPattern {
+private:
+	const int s1 = 0;
+	const int s2 = 0;
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x); // Detmine center coordinates
+
+		double limbScale = scales[s2];
+		if (limbScale >= scales[s1]) {
+			limbScale = scales[s1] / 2;
+		}
+
+		verticalOffsetAllowed = true;
+		horizontalOffsetAllowed = true;
+
+		// Get the smallest dimension / 2
+		double t = ((height < width) ? height : width) / 2;
+
+		// Compute scales for top, bottom, height
+		double halfRadius = t * scales[s1];
+		double limbRadius = t * limbScale;
+
+		// Coordinates
+		Array<Coordinate> c;
+		c.Add(Coordinate(centerCoord.y - halfRadius, centerCoord.x + limbRadius));
+		c.Add(Coordinate(centerCoord.y - limbRadius, centerCoord.x + limbRadius));
+		c.Add(Coordinate(centerCoord.y - limbRadius, centerCoord.x + halfRadius));
+		c.Add(Coordinate(centerCoord.y + limbRadius, centerCoord.x + halfRadius));
+		c.Add(Coordinate(centerCoord.y + limbRadius, centerCoord.x + limbRadius));
+		c.Add(Coordinate(centerCoord.y + halfRadius, centerCoord.x + limbRadius));
+		c.Add(Coordinate(centerCoord.y + halfRadius, centerCoord.x - limbRadius));
+		c.Add(Coordinate(centerCoord.y + limbRadius, centerCoord.x - limbRadius));
+		c.Add(Coordinate(centerCoord.y + limbRadius, centerCoord.x - halfRadius));
+		c.Add(Coordinate(centerCoord.y - limbRadius, centerCoord.x - halfRadius));
+		c.Add(Coordinate(centerCoord.y - limbRadius, centerCoord.x - limbRadius));
+		c.Add(Coordinate(centerCoord.y - halfRadius, centerCoord.x - limbRadius));
+
+		// Edges 
+		Array<Edge> edges;
+		for (int i = 0; i < c.GetSize(); i++) {
+			edges.Add(Edge(c[i], c[(i + 1) % c.GetSize()]));
+		}
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		//FillInPolygon(p);
+
+		//p.printPolygon();
+
+		/******************
+			Relatively garbage code to fill in difficult shapes
+		**********************/
+		Array<Coordinate> loneEdgePoints;
+		Array<int> edgePointCounter;
+		for (int i = 0; i < height; i++) {
+			edgePointCounter.Add(0);
+		}
+
+		for (int i = 0; i < c.GetSize(); i++) {
+			edgePointCounter[c[i].y] += 1;
+			pattern[c[i].y][c[i].x] = 1;
+		}
+
+		int minHeight = 0, maxHeight = 0;
+		for (int i = 0; i < edgePointCounter.GetSize(); i++) {
+			if (edgePointCounter[i] >= 1) {
+				minHeight = i;
+				break;
+			}
+		}
+
+		for (int i = ((int)edgePointCounter.GetSize()) - 1; i >= 0; i--) {
+			if (edgePointCounter[i] >= 1) {
+				maxHeight = i;
+				break;
+			}
+		}
+
+		bool foundMinCoord = false, foundMaxCoord = false;
+		Coordinate minCoordinate;
+		Coordinate maxCoordinate;
+		for (int j = 0; j < c.GetSize(); j++) {
+
+			if (minHeight == c[j].y) {
+				if (foundMinCoord) {
+					if (minCoordinate.x > c[j].x) {
+						minCoordinate = c[j];
+					}
+				}
+				else {
+					minCoordinate = c[j];
+					foundMinCoord = true;
+				}
+			}
+
+			if (maxHeight == c[j].y) {
+				if (foundMaxCoord) {
+					if (maxCoordinate.x > c[j].x) {
+						maxCoordinate = c[j];
+					}
+				}
+				else {
+					maxCoordinate = c[j];
+					foundMaxCoord = true;
+				}
+			}
+
+		}
+
+		loneEdgePoints.Add(minCoordinate);
+		loneEdgePoints.Add(maxCoordinate);
+
+		FillInPolygon(loneEdgePoints);
+	}
+
+public:
+
+	CrossPattern(int height, int width, const double* s) : UnitPattern(height, width, CROSS) {
+		SetScale(GetScalesForPattern(patternType), s);
+		GenerateUnitPattern();
+	}
+
+};
+
+
+/**********************************************************************************************
+###############################################################################################
+##### CRESCENT
+###############################################################################################
+**********************************************************************************************/
+class CrescentPattern : public UnitPattern {
+private:
+	const int s1 = 0;
+	const int s2 = 1;
+
+	void GenerateUnitPattern() {
+		Coordinate centerCoord;
+		GetCenter(height, width, centerCoord.y, centerCoord.x); // Detmine center coordinates
+
+		verticalOffsetAllowed = true;
+		horizontalOffsetAllowed = true;
+
+		// Get the smallest dimension / 2
+		double t = ((height < width) ? height : width) / 2;
+
+		// Compute scales for top, bottom, height
+		double halfRadius = t * scales[s1];
+
+		int angleStep = 20;
+
+		// Coordinates
+		Array<Coordinate> c;
+		for (double i = 180; i <= 360; i += angleStep) {
+			Coordinate newC = Polygon::ComputePointGivenAngleAndDistance(i, halfRadius, centerCoord);
+			if (!c.exists(newC)) {
+				c.Add(newC);
+			}
+		}
+
+		int distanceFromCenter = 0;
+		for (int i = c.GetSize() - 2; i >= 0; i--) {
+			distanceFromCenter = centerCoord.x - c[i].x;
+			c.Add(Coordinate(c[i].y, c[i].x + (distanceFromCenter * scales[s2])));
+		}
+
+		// Edges 
+		Array<Edge> edges;
+		for (int i = 0; i < c.GetSize(); i++) {
+			edges.Add(Edge(c[i], c[(i + 1) % c.GetSize()]));
+		}
+
+		Polygon p(edges);
+		p.plotPolygon(pattern);
+		FillInPolygon(p);
+
+	}
+
+public:
+
+	CrescentPattern(int height, int width, const double* s) : UnitPattern(height, width, CRESCENT) {
+		SetScale(GetScalesForPattern(patternType), s);
+		GenerateUnitPattern();
+	}
+
+};
 
 /**********************************************************************************************
 ###############################################################################################

@@ -134,6 +134,10 @@ public:
 		return s;
 	}
 
+	bool isSlopeZero() const {
+		return slope == 0;
+	}
+
 	double getValueAtY(int y) const {
 		return ((infSlope) ? c2.x : ((((double)y) - b) / slope));
 	}
@@ -163,7 +167,11 @@ public:
 			}
 		}
 		else {
-			int numCoordinates = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
+
+			int numCoordinatesY = (c2.y > c1.y) ? c2.y - c1.y : c1.y - c2.y;
+			int numCoordinatesX = (c2.x > c1.x) ? c2.x - c1.x : c1.x - c2.x;
+			int numCoordinates = 0;
+
 			double slope = 0;
 			double b = 0;
 			bool infSlope = false;
@@ -176,14 +184,32 @@ public:
 				b = c1.y - (slope * c1.x);
 			}
 
-			int startY = (c2.y > c1.y) ? c1.y : c2.y;
-			Coordinate c;
-			double d;
-			for (int i = 0; i < numCoordinates; i += 1) {
-				c.y = i + startY;
-				c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
-				line.Add(c);
+			if (numCoordinatesY > numCoordinatesX) {
+				numCoordinates = numCoordinatesY;
+				
+				int startY = (c2.y > c1.y) ? c1.y : c2.y;
+				Coordinate c;
+				double d;
+				for (int i = 0; i < numCoordinates; i += 1) {
+					c.y = i + startY;
+					c.x = (infSlope) ? c2.x : RoundDouble((((double)(c.y)) - b) / slope);
+					line.Add(c);
+				}
 			}
+			else {
+				numCoordinates = numCoordinatesX;
+
+				int startX = (c2.x > c1.x) ? c1.x : c2.x;
+				Coordinate c;
+				double d;
+				for (int i = 0; i < numCoordinates; i += 1) {
+					c.x = i + startX;
+					c.y = RoundDouble((((double)(c.x) * slope) + b));
+					line.Add(c);
+				}
+			}
+
+
 		}
 		if (!line.exists(c1)) { line.Add(c1); }
 		if (!line.exists(c2)) { line.Add(c2); }
@@ -280,7 +306,7 @@ public:
 					Coordinate other1 = (edges[i].c1 == c) ? edges[i].c2 : edges[i].c1;
 					Coordinate other2 = (edges[j].c1 == c) ? edges[j].c2 : edges[j].c1;
 					// Determine if a ray would intersect the two edges or just touch it
-					bool intersection = ((other1.y > c.y) && (other2.y < c.y)) || ((other1.y < c.y) && (other2.y > c.y));
+					bool intersection = ((other1.y >= c.y) && (other2.y <= c.y)) || ((other1.y <= c.y) && (other2.y >= c.y));
 					Angle a(c, intersection);
 					angles.Add(a);
 				}

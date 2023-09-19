@@ -1,27 +1,61 @@
 ﻿  PatternGenerator.cpp
 C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Polygon.h(19,8): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Polygon.h(181,11): warning C4101: 'd': unreferenced local variable
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(294,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(347,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(348,20): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(393,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(427,52): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(428,52): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(429,39): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(430,39): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(628,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(692,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(741,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(790,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(791,20): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1024,26): warning C4018: '<': signed/unsigned mismatch
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1040,26): warning C4018: '<': signed/unsigned mismatch
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1129,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1130,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1137,47): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1138,45): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1140,23): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1141,21): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Polygon.h(192,12): warning C4101: 'd': unreferenced local variable
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Polygon.h(204,12): warning C4101: 'd': unreferenced local variable
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(333,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(386,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(387,20): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(432,14): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(466,52): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(467,52): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(468,39): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(469,39): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(652,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(716,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(765,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(814,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(815,20): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1019,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1020,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1021,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1077,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1079,66): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1079,45): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1087,66): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1087,45): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1148,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1148,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1149,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1149,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1150,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1150,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1151,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1151,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1152,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1152,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1153,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1153,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1154,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1154,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1155,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1155,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1156,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1156,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1157,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1157,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1158,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1158,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1159,62): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1159,34): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1286,36): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1352,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1368,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1457,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1458,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1465,47): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1466,45): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1468,23): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Pattern.h(1469,21): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\Combination.h(59,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\PatternGenerator.cpp(152,1): message : see reference to function template instantiation 'Array<Array<int>> SomeCombinations<int>(const Array<int> &,const unsigned int &,const double &)' being compiled
+C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\PatternGenerator.cpp(156,1): message : see reference to function template instantiation 'Array<Array<int>> SomeCombinations<int>(const Array<int> &,const unsigned int &,const double &)' being compiled
   PatternGenerator.vcxproj -> C:\Users\james\Code\CPP\MachineLearningCPP\MachineLearningCPP\PatternGenerator\x64\Debug\PatternGenerator.exe
